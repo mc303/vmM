@@ -695,15 +695,16 @@ $inputXML = @"
 			#Connecteer met de server srvvc01
 			DisConnect-VIServer -Force -ErrorAction SilentlyContinue -Confirm:$false | Out-Null
 
-			if ($UseVCCredentials){
+			if ($UseVCCredentials -eq $true){
 				$credentials = credentialsVC
-				#write-host "VC"
-				Connect-VIServer -Server $vSphereConnection -Credential $credentials -ErrorAction Stop | Out-Null
+				Connect-VIServer -Server $vSphereConnection -Credential $credentials  -ErrorAction Stop # | Out-Null
+				$credentials = $null
 			} else {
-				Connect-VIServer -Server $vSphereConnection -ErrorAction Stop | Out-Null
+				Connect-VIServer -Server $vSphereConnection -ErrorAction Stop #| Out-Null
 			}
-
+			$UseVCCredentials = $false
 			$VC = $true
+
 		} catch [Exception]{
 	
 				#[System.Exception]
@@ -730,6 +731,10 @@ $inputXML = @"
 					
 				}
 
+				write-host "Error Message: $($_.Exception.Message)"
+				write-host "Error ItemName: $($_.Exception.ItemName)"
+				Write-Host "Error"
+
 				$VC = $false
 			}
 
@@ -742,14 +747,14 @@ $inputXML = @"
 
 				#Enable Tabs 2 and 3
 				($WPFtabControl.Items[1]).IsEnabled = $true
-				$WPFcmdDeployLinkedCloneVMRefresh.IsEnabled = $true
+				#$WPFcmdDeployLinkedCloneVMRefresh.IsEnabled = $true
 
 				getVMSInventory
 				#write-host "getVMSInventory Ready"
 				
 				$WPFlvVMs.SelectedIndex = 0
 			} else {
-				Write-Host "$VC -and $CH -and $CB -and $ADCred"
+				Write-Host "$VC"
 			}
 
 	}
@@ -760,24 +765,25 @@ $inputXML = @"
 		$WPFcmdConnect.IsEnabled = $true
 		$WPFcmdDisconnect.IsEnabled = $false
 		($WPFtabControl.Items[1]).IsEnabled = $false
-		($WPFtabControl.Items[2]).IsEnabled = $false
-		$WPFcmdDeployLinkedCloneVM.IsEnabled = $false
-		$WPFcmdDeployLinkedCloneVMRefresh.IsEnabled = $false
+		#($WPFtabControl.Items[2]).IsEnabled = $false
+		#$WPFcmdDeployLinkedCloneVM.IsEnabled = $false
+		#$WPFcmdDeployLinkedCloneVMRefresh.IsEnabled = $false
 		$dtVMList.Clear()
 		$dtSnapshotList.Clear()
 		$dtVMSnapshots.Clear()
 		$dtVMFolders.Clear()
 		$dtVMDatastores.Clear()
-		$dtADorganizationalUnit.Clear()
-		$dtXenHypervisorConnection.Clear()
-		$dtXenMachineCatalog.Clear()
-		$dtXenDeliveryGroup.Clear()
-		$dtADorganizationalUnit.Clear()
+		#$dtADorganizationalUnit.Clear()
+		#$dtXenHypervisorConnection.Clear()
+		#$dtXenMachineCatalog.Clear()
+		#$dtXenDeliveryGroup.Clear()
+		#$dtADorganizationalUnit.Clear()
 	}
 
 	function consoleVMRC(){
 		param (
-			$ItemIndex
+			$ItemIndex,
+			$MoRef
 		)
 		#thumbprint is on line 44 $connect[44] not tested yet 
 		# $test = Powershell -Command  "Add-PSSnapin vmware.vimautomation.core; Connect-VIServer esxi -User Username -Password Password" 
@@ -786,13 +792,12 @@ $inputXML = @"
 		$_glDefault = $global:DefaultVIServers #| where {$_.Name -eq "$(($WPFlvVMs.SelectedItem).VMHost)"}
         $_sessionmanager = Get-View $_glDefault.ExtensionData.Client.ServiceContent.SessionManager
         $_vcenter = $_glDefault.serviceuri.Host
-        $_vmid =  $dtVMlist.Rows[$ItemIndex].MoRef #$WPFlvVMs.SelectedIndex
         $_ticket =  $_sessionmanager.AcquireCloneTicket()
 		
 		#write-host "vmrc://clone:$($_ticket)@$($_vcenter):443/?moid=$($_vmid)"
         try {
 			if (Test-Path -LiteralPath "C:\Program Files (x86)\VMware\VMware Remote Console\vmrc.exe"){
-				Start-Process -FilePath "C:\Program Files (x86)\VMware\VMware Remote Console\vmrc.exe" -ArgumentList "vmrc://clone:$_ticket@$($_vcenter):443/?moid=$_vmid"
+				Start-Process -FilePath "C:\Program Files (x86)\VMware\VMware Remote Console\vmrc.exe" -ArgumentList "vmrc://clone:$_ticket@$($_vcenter):443/?moid=$MoRef"
 			}
 			}
         catch {
@@ -887,7 +892,7 @@ $inputXML = @"
 		)
 
 		if ($WPFlvVMs.SelectedIndex -gt -1){
-			consoleVMRC -ItemIndex $WPFlvVMs.SelectedIndex
+			consoleVMRC -ItemIndex $WPFlvVMs.SelectedIndex -MoRef ($WPFlvVMs.SelectedItem).MoRef
 		}
 	})
 
@@ -963,7 +968,7 @@ $inputXML = @"
 		[void]$dtSnapshotList.Clear()
 
 		$find = $WPFtxtVMSearch.text
-
+		#$dtVMList.DefaultView.RowFilter  = "GuestVM LIKE '$find*'"
 
 		$dvVMlist.RowFilter = "GuestVM LIKE '$find*'"
 
@@ -1081,7 +1086,7 @@ $inputXML = @"
 		
 		if($e.Key -eq [System.Windows.Input.Key]::Return){
 			$Form.Cursor = [System.Windows.Input.Cursors]::Wait
-			connectVIServer -UseADCredentials:$WPFchkbUseVCCredentials.isChecked -vSphereConnection $WPFtxtvSphereConnection.Text.trim()
+			connectVIServer -UseVCCredentials:$WPFchkbUseVCCredentials.isChecked -vSphereConnection $WPFtxtvSphereConnection.Text.trim()
 			$Form.Cursor = [System.Windows.Input.Cursors]::Arrow
 		}
 
