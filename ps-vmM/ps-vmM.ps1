@@ -566,109 +566,109 @@ $inputXML = @"
 
 	}
 
-	function deployLinkedCloneVMs(){
-		param(
-			$ParentVM,
-			$FullConeVM,
-			[switch]$DeleteVMBeforeDeploy=$false,
-			[switch]$StartVMAfterDeploy=$false,
-			[switch]$LinkVMtoXenDesktop=$false,
-			[switch]$NewADComputerAccount=$false,
-			[switch]$CreatePooledVM=$false
-		)
+	#function deployLinkedCloneVMs(){
+	#	param(
+	#		$ParentVM,
+	#		$FullConeVM,
+	#		[switch]$DeleteVMBeforeDeploy=$false,
+	#		[switch]$StartVMAfterDeploy=$false,
+	#		[switch]$LinkVMtoXenDesktop=$false,
+	#		[switch]$NewADComputerAccount=$false,
+	#		[switch]$CreatePooledVM=$false
+	#	)
 
-		[int]$_lc_vms = $WPFtxtVMSDeploy.Text 
-		[int]$_lc_vdi_startnumber = $WPFtxtVMStartNumber.Text
-		[string]$_lc_numbering = "{0:d$(($WPFcbbVMHostnameNumbering.SelectedIndex + 1))}"
-		[string]$_lc_vmname_prefix = $WPFtxtVMHostnamePrefix.Text
+	#	[int]$_lc_vms = $WPFtxtVMSDeploy.Text 
+	#	[int]$_lc_vdi_startnumber = $WPFtxtVMStartNumber.Text
+	#	[string]$_lc_numbering = "{0:d$(($WPFcbbVMHostnameNumbering.SelectedIndex + 1))}"
+	#	[string]$_lc_vmname_prefix = $WPFtxtVMHostnamePrefix.Text
 
 		
-		$_newguid = [guid]::NewGuid()
-		$_parentVMName = "$($Global:ParantVMPrefix)$_newguid"
+	#	$_newguid = [guid]::NewGuid()
+	#	$_parentVMName = "$($Global:ParantVMPrefix)$_newguid"
 
-		$DeployedLinkedCloneVMs.Clear()
+	#	$DeployedLinkedCloneVMs.Clear()
 
-		# Create VMname list
-		1..$_lc_vms | ForEach-Object {
-			[string]$_vmnr = $_lc_numbering -f $_lc_vdi_startnumber
-			$_vmname = "$($_lc_vmname_prefix)$_vmnr"
+	#	# Create VMname list
+	#	1..$_lc_vms | ForEach-Object {
+	#		[string]$_vmnr = $_lc_numbering -f $_lc_vdi_startnumber
+	#		$_vmname = "$($_lc_vmname_prefix)$_vmnr"
 			
-			#Add VMname to List(VMname)
-			$deployedLinkedCloneVMs.Add($_vmname) 
+	#		#Add VMname to List(VMname)
+	#		$deployedLinkedCloneVMs.Add($_vmname) 
 
-			#Add +1 to VMname
-			$_lc_vdi_startnumber += 1
-		}
+	#		#Add +1 to VMname
+	#		$_lc_vdi_startnumber += 1
+	#	}
 
-		if($CreatePooledVM){
-			# First Delete all VMs
-			foreach ($_newvm in $deployedLinkedCloneVMs){
-				if($DeleteVMBeforeDeploy){	
-					deleteVMPermanently -vmname $_newvm
-				}
-			}
+	#	if($CreatePooledVM){
+	#		# First Delete all VMs
+	#		foreach ($_newvm in $deployedLinkedCloneVMs){
+	#			if($DeleteVMBeforeDeploy){	
+	#				deleteVMPermanently -vmname $_newvm
+	#			}
+	#		}
 
-			foreach ($_newvm in $deployedLinkedCloneVMs){	
-				write-host "creating full clone $_newvm "
-				createFullCloneFromVM `
-					-ParentVM $ParentVM `
-					-VMname $_newvm `
-					-DestinationFolderID $WPFcbbVMFolders.SelectedValue `
-					-DestinationDatastoreID $WPFcbbVMDatastores.SelectedValue 
+	#		foreach ($_newvm in $deployedLinkedCloneVMs){	
+	#			write-host "creating full clone $_newvm "
+	#			createFullCloneFromVM `
+	#				-ParentVM $ParentVM `
+	#				-VMname $_newvm `
+	#				-DestinationFolderID $WPFcbbVMFolders.SelectedValue `
+	#				-DestinationDatastoreID $WPFcbbVMDatastores.SelectedValue 
 
-				addGuestinfoToVM -VMname $_newvm -GuestinfoKey "guestinfo.hostname" -GuestinfoValue $_newvm 
+	#			addGuestinfoToVM -VMname $_newvm -GuestinfoKey "guestinfo.hostname" -GuestinfoValue $_newvm 
 
-				#Set memory and Memory Reservation
-				Get-VM -Name $_newvm | Set-VM -MemoryGB $WPFcbbVMMemoryInGB.SelectedValue -Confirm:$false
-				Get-VM -Name $_newvm | Get-VMResourceConfiguration | Set-VMResourceConfiguration -MemReservationGB $WPFcbbVMMemoryReservationInGB.SelectedValue -Confirm:$false
-			}
-		}
+	#			#Set memory and Memory Reservation
+	#			Get-VM -Name $_newvm | Set-VM -MemoryGB $WPFcbbVMMemoryInGB.SelectedValue -Confirm:$false
+	#			Get-VM -Name $_newvm | Get-VMResourceConfiguration | Set-VMResourceConfiguration -MemReservationGB $WPFcbbVMMemoryReservationInGB.SelectedValue -Confirm:$false
+	#		}
+	#	}
 
-		if($NewADComputerAccount){
-			foreach ($_newvm in $deployedLinkedCloneVMs){
+	#	if($NewADComputerAccount){
+	#		foreach ($_newvm in $deployedLinkedCloneVMs){
 
-				actionCreateNewADComputerAccountV2 `
-					-ADComputerName $_newvm `
-					-OU $WPFcbbADOU.SelectedValue `
-					-DNSSuffix $WPFtxtADDNSSuffix.Text.Trim() `
-					-DomainController $WPFtxtADDomainController.Text.Trim() `
-					-ADCredentials:$WPFchkbADCredToCreateADComputer.IsChecked `
-					-Username $WPFtxtADUsername.Text.Trim() `
-					-Passwd $WPFtxtADPasswd.Password
-			}
+	#			actionCreateNewADComputerAccountV2 `
+	#				-ADComputerName $_newvm `
+	#				-OU $WPFcbbADOU.SelectedValue `
+	#				-DNSSuffix $WPFtxtADDNSSuffix.Text.Trim() `
+	#				-DomainController $WPFtxtADDomainController.Text.Trim() `
+	#				-ADCredentials:$WPFchkbADCredToCreateADComputer.IsChecked `
+	#				-Username $WPFtxtADUsername.Text.Trim() `
+	#				-Passwd $WPFtxtADPasswd.Password
+	#		}
 
-			#wait until de AD accounts are created
-			waitUntilADComputerAccountsExists -ADComputerNames $deployedLinkedCloneVMs -WaitFor5SecCount 60
-		}
+	#		#wait until de AD accounts are created
+	#		waitUntilADComputerAccountsExists -ADComputerNames $deployedLinkedCloneVMs -WaitFor5SecCount 60
+	#	}
 
 
 
-		if($LinkVMtoXenDesktop){
-			updateOrAddVMtoBrokerMachine `
-				-AdminAddress $WPFtxtAdminServer.Text.Trim() `
-				-XDHyp $WPFcbbXDHyp.Text.Trim() `
-				-DeployedLinkedCloneVMs $deployedLinkedCloneVMs `
-				-HypervisorConnectionUID $WPFcbbXenHypervisorConnection.SelectedValue `
-				-DesktopDeliveryGroupUID  $WPFcbbXenDeliveryGroup.SelectedValue `
-				-MachineCatalogUID $WPFcbbXenMachineCatalog.SelectedValue `
-				-NetBIOSDomain $WPFtxtNetBIOSName.Text.trim() `
-				-TurnOnMaintenanceMode:$WPFchkbXenTurnOnMaintenanceMode.IsChecked `
-				-Tag $ParentVM			
-		}
+	#	if($LinkVMtoXenDesktop){
+	#		updateOrAddVMtoBrokerMachine `
+	#			-AdminAddress $WPFtxtAdminServer.Text.Trim() `
+	#			-XDHyp $WPFcbbXDHyp.Text.Trim() `
+	#			-DeployedLinkedCloneVMs $deployedLinkedCloneVMs `
+	#			-HypervisorConnectionUID $WPFcbbXenHypervisorConnection.SelectedValue `
+	#			-DesktopDeliveryGroupUID  $WPFcbbXenDeliveryGroup.SelectedValue `
+	#			-MachineCatalogUID $WPFcbbXenMachineCatalog.SelectedValue `
+	#			-NetBIOSDomain $WPFtxtNetBIOSName.Text.trim() `
+	#			-TurnOnMaintenanceMode:$WPFchkbXenTurnOnMaintenanceMode.IsChecked `
+	#			-Tag $ParentVM			
+	#	}
 
-		if($StartVMAfterDeploy -and $CreatePooledVM){
-			foreach ($_newvm in $deployedLinkedCloneVMs){
-				ActionStartVM -VMname $_newvm -RunAsync $true
-			}	
-		}
+	#	if($StartVMAfterDeploy -and $CreatePooledVM){
+	#		foreach ($_newvm in $deployedLinkedCloneVMs){
+	#			ActionStartVM -VMname $_newvm -RunAsync $true
+	#		}	
+	#	}
 
-		if($WPFchkbPurgeKerberos.IsChecked){
-			executeKlist
-		}
+	#	if($WPFchkbPurgeKerberos.IsChecked){
+	#		executeKlist
+	#	}
 
-		ActionRefreshVMList
+	#	ActionRefreshVMList
 		
-	}
+	#}
 
 	function credentialsVC{
 		$credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @("$($WPFtxtVCUsername.Text)",$WPFtxtVCPasswd.SecurePassword)
@@ -677,7 +677,7 @@ $inputXML = @"
 
 	function connectVIServer(){
 		param (
-			[switch]$UseADCredentials,
+			[switch]$UseVCCredentials,
 			$vSphereConnection
 
 		)
@@ -694,16 +694,15 @@ $inputXML = @"
 			}
 			#Connecteer met de server srvvc01
 			DisConnect-VIServer -Force -ErrorAction SilentlyContinue -Confirm:$false | Out-Null
-			if ($UseADCredentials){
+
+			if ($UseVCCredentials){
 				$credentials = credentialsVC
-				write-host "VC"
+				#write-host "VC"
+				Connect-VIServer -Server $vSphereConnection -Credential $credentials -ErrorAction Stop | Out-Null
 			} else {
-				$credentials = credentialsAD
-				write-host "AD"
+				Connect-VIServer -Server $vSphereConnection -ErrorAction Stop | Out-Null
 			}
 
-			Connect-VIServer -Server $vSphereConnection -Credential $credentials -ErrorAction Stop | Out-Null
-				
 			$VC = $true
 		} catch [Exception]{
 	
@@ -819,7 +818,7 @@ $inputXML = @"
 			[Parameter(Mandatory)][System.Windows.RoutedEventArgs]$e
 		)
 
-		connectVIServer -UseADCredentials:$WPFchkbUseVCCredentials.IsChecked -vSphereConnection $WPFtxtvSphereConnection.Text.trim()
+		connectVIServer -UseVCCredentials:$WPFchkbUseVCCredentials.IsChecked -vSphereConnection $WPFtxtvSphereConnection.Text.trim()
 	})
 
 	$WPFcmdDisconnect.Add_Click({
