@@ -43,7 +43,6 @@ $inputXML = @"
 	}
 
 	Set-Variable -Name "ParantVMSnapshotName" -Scope Global -Option AllScope -Value 0
-
 	Set-Variable -Name "ParantVMPrefix" -Scope Global -Option AllScope -Value 0
 
 	$Global:ParantVMPrefix = "base-parentvm-" 
@@ -128,17 +127,17 @@ $inputXML = @"
 	$WPFlvVMs.ItemsSource = $dvVMlist
 	$WPFlvSnapshotList.ItemsSource = $dvSnapshotList 
 
-	$WPFcbbParentVM.ItemsSource = $dvVMParentVM
-	$WPFcbbParentVM.DisplayMemberPath = 'GuestVM'
-	$WPFcbbParentVM.SelectedValuePath = 'GuestVMID'
+	#$WPFcbbParentVM.ItemsSource = $dvVMParentVM
+	#$WPFcbbParentVM.DisplayMemberPath = 'GuestVM'
+	#$WPFcbbParentVM.SelectedValuePath = 'GuestVMID'
 
-	$WPFcbbVMFolders.ItemsSource = $dvVMFolders
-	$WPFcbbVMFolders.DisplayMemberPath = 'Folder'
-	$WPFcbbVMFolders.SelectedValuePath = 'FolderID'
+	#$WPFcbbVMFolders.ItemsSource = $dvVMFolders
+	#$WPFcbbVMFolders.DisplayMemberPath = 'Folder'
+	#$WPFcbbVMFolders.SelectedValuePath = 'FolderID'
 
-	$WPFcbbVMDatastores.ItemsSource = $dvVMDatastores
-	$WPFcbbVMDatastores.DisplayMemberPath = 'Datastore'
-	$WPFcbbVMDatastores.SelectedValuePath = 'DatastoreID'
+	#$WPFcbbVMDatastores.ItemsSource = $dvVMDatastores
+	#$WPFcbbVMDatastores.DisplayMemberPath = 'Datastore'
+	#$WPFcbbVMDatastores.SelectedValuePath = 'DatastoreID'
 
 
 
@@ -252,6 +251,20 @@ $inputXML = @"
 		$dtVMDatastores.Rows.Add("$Datastore","$DatastoreID")
 	}
 
+	function addItemToSnapshotList(){
+		param(
+			$IsCurrent,
+			$SnapshotName,
+			$DateCreated,
+			$ParentSnapshot,
+			$SnapshotID,
+			$ParentSnapshotID
+		)
+
+		$dtSnapshotList.Rows.Add("$IsCurrent","$SnapshotName","$DateCreated","$ParentSnapshot","$SnapshotID","$ParentSnapshotID")
+	}
+
+
 
 	function updatePowerStateGuestVM(){
 		param (
@@ -292,6 +305,8 @@ $inputXML = @"
 			addItemToSnapshotList -IsCurrent $_.IsCurrent.ToString() -SnapshotName $_.Name -DateCreated $_.Created -ParentSnapshot $_.ParentSnapshot -SnapshotID $_.Id -ParentSnapshotID $_.ParentSnapshotId
 		} -Confirm:$false | Out-Null
 	}
+
+
 
 	function newSnapshot(){
 		param(
